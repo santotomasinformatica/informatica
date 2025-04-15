@@ -1,4 +1,4 @@
-// App.js - Con enfoque alternativo para subir archivos
+// App.js - Usando Cloudinary en lugar de Firebase Storage
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { 
@@ -10,13 +10,6 @@ import {
   deleteDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { 
-  getStorage, 
-  ref, 
-  uploadString,
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
 import './App.css';
 
 // Componentes
@@ -25,7 +18,7 @@ import FileUploader from './components/FileUploader';
 import FileGallery from './components/FileGallery';
 import LoadingOverlay from './components/LoadingOverlay';
 
-// Configuración de Firebase
+// Configuración de Firebase (solo para Firestore)
 const firebaseConfig = {
   apiKey: "AIzaSyBMUj9uAbsqZGP2tlzNcEVWefGW4BzZqVc",
   authDomain: "bdpruebafinal.firebaseapp.com",
@@ -36,10 +29,15 @@ const firebaseConfig = {
   appId: "1:85413415022:web:d2cc4402e97145ad65be7f"
 };
 
-// Inicializar Firebase
+// Configuración de Cloudinary (reemplaza con tus credenciales)
+// Puedes obtener esto registrándote en https://cloudinary.com/
+const CLOUDINARY_UPLOAD_PRESET = 'ml_default'; // Cambia esto por tu upload preset
+const CLOUDINARY_CLOUD_NAME = 'dkci8ferq'; // Cambia esto por tu cloud name
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+
+// Inicializar Firebase (solo Firestore)
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const filesCollectionRef = collection(db, 'files');
 
 function App() {
@@ -76,16 +74,6 @@ function App() {
     }
   };
 
-  // Función para convertir archivo a base64
-  const getBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   // Función para manejar archivos seleccionados
   const handleFileSelect = (newFiles) => {
     const filesArray = Array.from(newFiles);
@@ -99,7 +87,7 @@ function App() {
     );
   };
 
-  // Función para subir archivos (usando Base64)
+  // Función para subir archivos a Cloudinary
   const uploadFiles = async () => {
     if (selectedFiles.length === 0) {
       alert('Por favor, selecciona al menos un archivo.');
@@ -113,33 +101,35 @@ function App() {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         
-        // Convertir a Base64
-        const base64Data = await getBase64(file);
+        // Preparar FormData para Cloudinary
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder', 'carousel-files');
         
-        // Obtener metadata del file
-        let fileType = file.type;
-        let isImage = fileType.startsWith('image/');
+        // Subir a Cloudinary usando Fetch API (sin problemas CORS)
+        const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+          method: 'POST',
+          body: formData
+        });
         
-        // Crear una referencia única para el archivo
-        const fileId = Date.now() + '_' + file.name;
-        const fileFormat = isImage ? '.img' : '.vid'; // Extensión personalizada para evitar restricciones MIME
-        const storagePath = `files/${fileId}${fileFormat}`;
-        const storageRef = ref(storage, storagePath);
+        if (!response.ok) {
+          throw new Error('Error al subir a Cloudinary');
+        }
         
-        // Subir como string (Base64)
-        await uploadString(storageRef, base64Data, 'data_url');
+        const cloudinaryData = await response.json();
         
-        // Obtener URL para descarga
-        const downloadURL = await getDownloadURL(storageRef);
+        // Verificar tipo de archivo
+        const isImage = file.type.startsWith('image/');
         
-        // Guardar información en Firestore
+        // Guardar información en Firestore (solo metadatos)
         await addDoc(filesCollectionRef, {
           name: file.name,
           type: file.type,
           size: file.size,
-          url: downloadURL,
-          storagePath: storagePath,
-          isImage: isImage, // Guardar si es imagen o no
+          url: cloudinaryData.secure_url, // URL HTTPS de Cloudinary
+          publicId: cloudinaryData.public_id, // ID público en Cloudinary (para eliminación)
+          isImage: isImage,
           timestamp: serverTimestamp()
         });
         
@@ -160,13 +150,13 @@ function App() {
   };
 
   // Función para eliminar archivo
-  const deleteFile = async (id, path) => {
+  const deleteFile = async (id, publicId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este archivo? Esta acción no se puede deshacer.')) {
       setLoading(true);
       try {
-        // Eliminar de Storage
-        const storageRef = ref(storage, path);
-        await deleteObject(storageRef);
+        // Eliminar de Cloudinary (requiere backend o función serverless)
+        // Nota: Para una eliminación completa, necesitarías un backend que use la API Admin de Cloudinary
+        // En esta implementación, solo eliminaremos la referencia de Firestore
         
         // Eliminar de Firestore
         await deleteDoc(doc(db, 'files', id));
