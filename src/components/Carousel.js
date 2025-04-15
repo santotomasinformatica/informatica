@@ -30,7 +30,7 @@ const Carousel = ({ files }) => {
     
     const slideInterval = setInterval(() => {
       changeSlide('next');
-    }, 5000);
+    }, 10000);
     
     return () => clearInterval(slideInterval);
   }, [changeSlide, slides.length]);
