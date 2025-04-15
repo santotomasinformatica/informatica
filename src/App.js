@@ -1,9 +1,25 @@
-// App.js - Componente principal
+// App.js - Con enfoque alternativo para subir archivos
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  doc, 
+  deleteDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { 
+  getStorage, 
+  ref, 
+  uploadString,
+  getDownloadURL, 
+  deleteObject 
+} from 'firebase/storage';
 import './App.css';
+
+// Componentes
 import Carousel from './components/Carousel';
 import FileUploader from './components/FileUploader';
 import FileGallery from './components/FileGallery';
@@ -60,6 +76,16 @@ function App() {
     }
   };
 
+  // Función para convertir archivo a base64
+  const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   // Función para manejar archivos seleccionados
   const handleFileSelect = (newFiles) => {
     const filesArray = Array.from(newFiles);
@@ -73,7 +99,7 @@ function App() {
     );
   };
 
-  // Función para subir archivos
+  // Función para subir archivos (usando Base64)
   const uploadFiles = async () => {
     if (selectedFiles.length === 0) {
       alert('Por favor, selecciona al menos un archivo.');
@@ -86,59 +112,48 @@ function App() {
     try {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
+        
+        // Convertir a Base64
+        const base64Data = await getBase64(file);
+        
+        // Obtener metadata del file
+        let fileType = file.type;
+        let isImage = fileType.startsWith('image/');
+        
+        // Crear una referencia única para el archivo
         const fileId = Date.now() + '_' + file.name;
-        const storagePath = `files/${fileId}`;
+        const fileFormat = isImage ? '.img' : '.vid'; // Extensión personalizada para evitar restricciones MIME
+        const storagePath = `files/${fileId}${fileFormat}`;
         const storageRef = ref(storage, storagePath);
-
-        // Iniciar carga
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        // Promesa para manejar la carga
-        await new Promise((resolve, reject) => {
-          uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              setUploadProgress(progress);
-            },
-            (error) => {
-              console.error("Error al subir archivo:", error);
-              reject(error);
-            },
-            async () => {
-              try {
-                // Carga completada
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-                // Guardar información en Firestore
-                await addDoc(filesCollectionRef, {
-                  name: file.name,
-                  type: file.type,
-                  size: file.size,
-                  url: downloadURL,
-                  storagePath: storagePath,
-                  timestamp: serverTimestamp()
-                });
-
-                resolve();
-              } catch (error) {
-                reject(error);
-              }
-            }
-          );
+        
+        // Subir como string (Base64)
+        await uploadString(storageRef, base64Data, 'data_url');
+        
+        // Obtener URL para descarga
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        // Guardar información en Firestore
+        await addDoc(filesCollectionRef, {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: downloadURL,
+          storagePath: storagePath,
+          isImage: isImage, // Guardar si es imagen o no
+          timestamp: serverTimestamp()
         });
-
+        
         // Actualizar progreso
-        setUploadProgress((i + 1) / selectedFiles.length * 100);
+        setUploadProgress(((i + 1) / selectedFiles.length) * 100);
       }
 
       // Limpiar y recargar
       setSelectedFiles([]);
       setUploadProgress(0);
-      loadFiles();
+      await loadFiles();
     } catch (error) {
-      console.error("Error general al subir archivos:", error);
-      alert('Error al subir archivos. Por favor, intenta de nuevo.');
+      console.error("Error al subir archivos:", error);
+      alert('Error al subir archivos. Por favor, intenta de nuevo: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -157,7 +172,7 @@ function App() {
         await deleteDoc(doc(db, 'files', id));
         
         // Recargar archivos
-        loadFiles();
+        await loadFiles();
       } catch (error) {
         console.error("Error al eliminar archivo:", error);
         alert('Error al eliminar el archivo. Por favor, intenta de nuevo.');

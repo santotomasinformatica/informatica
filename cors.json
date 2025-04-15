@@ -1,0 +1,8 @@
+[
+    {
+      "origin": ["https://santotomasinformatica.github.io"],
+      "method": ["GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS"],
+      "maxAgeSeconds": 3600,
+      "responseHeader": ["Content-Type", "x-goog-meta-*"]
+    }
+  ]

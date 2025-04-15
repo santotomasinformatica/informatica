@@ -1,4 +1,4 @@
-// components/Carousel.js
+// components/Carousel.js - Modificado para el nuevo enfoque
 import React, { useState, useEffect, useCallback } from 'react';
 
 const Carousel = ({ files }) => {
@@ -56,17 +56,14 @@ const Carousel = ({ files }) => {
             key={file.id} 
             className={`carousel-slide ${index === activeSlide ? 'active' : ''}`}
           >
-            {file.type.startsWith('image/') ? (
+            {/* Usar la propiedad isImage para determinar el tipo en lugar de verificar el mime type */}
+            {file.isImage ? (
               <img src={file.url} alt={file.name} />
-            ) : file.type.startsWith('video/') ? (
+            ) : (
               <video autoPlay muted loop>
-                <source src={file.url} type={file.type} />
+                <source src={file.url} />
                 Tu navegador no soporta la reproducción de videos.
               </video>
-            ) : (
-              <div className="unsupported-file">
-                Formato de archivo no soportado
-              </div>
             )}
           </div>
         ))}

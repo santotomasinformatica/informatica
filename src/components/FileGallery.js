@@ -1,4 +1,4 @@
-// components/FileGallery.js
+// components/FileGallery.js - Modificado para el nuevo enfoque
 import React from 'react';
 
 const FileGallery = ({ files, onDelete }) => {
@@ -30,17 +30,14 @@ const FileGallery = ({ files, onDelete }) => {
       {files.map((file) => (
         <div className="file-item" key={file.id}>
           <div className="file-preview">
-            {file.type.startsWith('image/') ? (
+            {/* Usar la propiedad isImage en lugar de verificar el mime type */}
+            {file.isImage ? (
               <img src={file.url} alt={file.name} />
-            ) : file.type.startsWith('video/') ? (
+            ) : (
               <video controls>
-                <source src={file.url} type={file.type} />
+                <source src={file.url} />
                 Tu navegador no soporta la reproducción de videos.
               </video>
-            ) : (
-              <div className="unsupported-file">
-                Formato no soportado
-              </div>
             )}
           </div>
           
