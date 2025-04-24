@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/informatica/static/css/main.f5e64642.css",
-    "main.js": "/informatica/static/js/main.3609e9c3.js",
+    "main.js": "/informatica/static/js/main.9b000652.js",
     "index.html": "/informatica/index.html",
     "main.f5e64642.css.map": "/informatica/static/css/main.f5e64642.css.map",
-    "main.3609e9c3.js.map": "/informatica/static/js/main.3609e9c3.js.map"
+    "main.9b000652.js.map": "/informatica/static/js/main.9b000652.js.map"
   },
   "entrypoints": [
     "static/css/main.f5e64642.css",
-    "static/js/main.3609e9c3.js"
+    "static/js/main.9b000652.js"
   ]
 }
