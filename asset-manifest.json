@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/informatica/static/css/main.f5e64642.css",
-    "main.js": "/informatica/static/js/main.92d24043.js",
+    "main.css": "/informatica/static/css/main.aaab03d4.css",
+    "main.js": "/informatica/static/js/main.59d24d93.js",
     "index.html": "/informatica/index.html",
-    "main.f5e64642.css.map": "/informatica/static/css/main.f5e64642.css.map",
-    "main.92d24043.js.map": "/informatica/static/js/main.92d24043.js.map"
+    "main.aaab03d4.css.map": "/informatica/static/css/main.aaab03d4.css.map",
+    "main.59d24d93.js.map": "/informatica/static/js/main.59d24d93.js.map"
   },
   "entrypoints": [
-    "static/css/main.f5e64642.css",
-    "static/js/main.92d24043.js"
+    "static/css/main.aaab03d4.css",
+    "static/js/main.59d24d93.js"
   ]
 }
