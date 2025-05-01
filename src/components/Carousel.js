@@ -1,17 +1,24 @@
-// components/Carousel.js - Modificado para el nuevo enfoque
-import React, { useState, useEffect, useCallback } from 'react';
+// components/Carousel.js - Optimizado para mantener proporción de imagen con letterboxing
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const Carousel = ({ files }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [slides, setSlides] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const containerRef = useRef(null);
 
   // Actualizar diapositivas cuando cambian los archivos
   useEffect(() => {
-    if (files.length > 0) {
+    if (files.length > 0 && isLoaded) {
       setSlides(files);
       setActiveSlide(0);
     }
-  }, [files]);
+  }, [files, isLoaded]);
+
+  // Función para cargar las imágenes
+  const handleLoadImages = () => {
+    setIsLoaded(true);
+  };
 
   // Función para cambiar diapositiva
   const changeSlide = useCallback((direction) => {
@@ -26,14 +33,14 @@ const Carousel = ({ files }) => {
 
   // Configurar cambio automático de diapositivas
   useEffect(() => {
-    if (slides.length === 0) return;
+    if (slides.length === 0 || !isLoaded) return;
     
     const slideInterval = setInterval(() => {
       changeSlide('next');
     }, 10000);
     
     return () => clearInterval(slideInterval);
-  }, [changeSlide, slides.length]);
+  }, [changeSlide, slides.length, isLoaded]);
 
   // Renderizar mensaje cuando no hay archivos
   if (files.length === 0) {
@@ -48,17 +55,41 @@ const Carousel = ({ files }) => {
     );
   }
 
+  // Mostrar botón de carga si las imágenes no están cargadas
+  if (!isLoaded) {
+    return (
+      <div className="carousel-container">
+        <div className="carousel-slide active">
+          <div className="load-images-container">
+            <button className="load-images-btn" onClick={handleLoadImages}>
+              Ver imágenes
+            </button>
+            <p className="load-info">
+              Haz clic para cargar el carrusel de imágenes
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="carousel-container">
+    <div className="carousel-container" ref={containerRef}>
       <div className="carousel-slides">
         {slides.map((file, index) => (
           <div 
             key={file.id} 
             className={`carousel-slide ${index === activeSlide ? 'active' : ''}`}
           >
-            {/* Usar la propiedad isImage para determinar el tipo en lugar de verificar el mime type */}
             {file.isImage ? (
-              <img src={file.url} alt={file.name} />
+              <div className="letterbox-container">
+                <img 
+                  src={file.url} 
+                  alt={file.name} 
+                  className="letterboxed-image"
+                  loading="lazy"
+                />
+              </div>
             ) : (
               <video autoPlay muted loop>
                 <source src={file.url} />

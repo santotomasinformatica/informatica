@@ -1,5 +1,5 @@
-// components/FileUploader.js
-import React, { useRef } from 'react';
+// components/FileUploader.js - Con protección de contraseña
+import React, { useRef, useState } from 'react';
 
 const FileUploader = ({ 
   selectedFiles, 
@@ -9,6 +9,12 @@ const FileUploader = ({
   uploadProgress 
 }) => {
   const fileInputRef = useRef(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  
+  // Contraseña correcta
+  const correctPassword = 'lia-st2025';
 
   const handleFileInputChange = (e) => {
     if (e.target.files.length > 0) {
@@ -38,6 +44,31 @@ const FileUploader = ({
     fileInputRef.current.click();
   };
 
+  // Maneja el click en el botón "Subir Archivos"
+  const handleUploadClick = () => {
+    setPasswordError('');
+    setShowPasswordModal(true);
+  };
+
+  // Verifica la contraseña y sube los archivos
+  const verifyPasswordAndUpload = () => {
+    if (password === correctPassword) {
+      setShowPasswordModal(false);
+      setPassword('');
+      setPasswordError('');
+      onUpload();
+    } else {
+      setPasswordError('Contraseña incorrecta');
+    }
+  };
+
+  // Cierra el modal
+  const closeModal = () => {
+    setShowPasswordModal(false);
+    setPassword('');
+    setPasswordError('');
+  };
+
   // Renderizar previsualizaciones de archivos seleccionados
   const renderFilePreviews = () => {
     return selectedFiles.map((file, index) => (
@@ -62,6 +93,42 @@ const FileUploader = ({
         </div>
       </div>
     ));
+  };
+
+  // Renderiza el modal de contraseña
+  const renderPasswordModal = () => {
+    if (!showPasswordModal) return null;
+
+    return (
+      <div className="password-modal-overlay">
+        <div className="password-modal">
+          <div className="password-modal-header">
+            <h3>Ingrese la contraseña</h3>
+            <button className="close-modal" onClick={closeModal}>×</button>
+          </div>
+          <div className="password-modal-body">
+            <p>Ingrese la contraseña para subir archivos:</p>
+            <input 
+              type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="password-input"
+              placeholder="Contraseña"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') verifyPasswordAndUpload();
+              }}
+            />
+            {passwordError && (
+              <div className="password-error">{passwordError}</div>
+            )}
+          </div>
+          <div className="password-modal-footer">
+            <button className="cancel-btn" onClick={closeModal}>Cancelar</button>
+            <button className="submit-btn" onClick={verifyPasswordAndUpload}>Aceptar</button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -104,11 +171,13 @@ const FileUploader = ({
       <button 
         type="button" 
         className="upload-btn"
-        onClick={onUpload}
+        onClick={handleUploadClick}
         disabled={selectedFiles.length === 0}
       >
         Subir Archivos
       </button>
+      
+      {renderPasswordModal()}
     </div>
   );
 };

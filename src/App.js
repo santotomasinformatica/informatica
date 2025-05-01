@@ -20,13 +20,12 @@ import LoadingOverlay from './components/LoadingOverlay';
 
 // Configuración de Firebase (solo para Firestore)
 const firebaseConfig = {
-  apiKey: "AIzaSyBMUj9uAbsqZGP2tlzNcEVWefGW4BzZqVc",
-  authDomain: "bdpruebafinal.firebaseapp.com",
-  databaseURL: "https://bdpruebafinal-default-rtdb.firebaseio.com",
-  projectId: "bdpruebafinal",
-  storageBucket: "bdpruebafinal.appspot.com",
-  messagingSenderId: "85413415022",
-  appId: "1:85413415022:web:d2cc4402e97145ad65be7f"
+  apiKey: "AIzaSyDV8e28v-uKwBNvkFUW4RwE6nS8i97NbK4",
+  authDomain: "nacional-5ed0a.firebaseapp.com",
+  projectId: "nacional-5ed0a",
+  storageBucket: "nacional-5ed0a.firebasestorage.app",
+  messagingSenderId: "1023598065322",
+  appId: "1:1023598065322:web:5bbd9f0637ac55030442d3"
 };
 
 // Configuración de Cloudinary (reemplaza con tus credenciales)
